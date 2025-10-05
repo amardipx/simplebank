@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 
 	db "github.com/amardipx/simplebank/db/sqlc"
@@ -44,6 +45,12 @@ func (server *Server) getAccount(ctx *gin.Context) {
 	err := ctx.ShouldBindUri(&req)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if req.ID <= 0 {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid account ID")))
+		return
 	}
 
 	account, err := server.store.GetAccount(ctx, req.ID)
