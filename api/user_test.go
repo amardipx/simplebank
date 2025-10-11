@@ -42,7 +42,7 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				var gotResp CreateUserResponse
+				var gotResp UserResponse
 				err := json.Unmarshal(recorder.Body.Bytes(), &gotResp)
 				require.NoError(t, err)
 				require.Equal(t, user.Username, gotResp.Username)
@@ -114,7 +114,7 @@ func TestCreateUserAPI(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := NewServer(store)
+			server := newTestServer(t, store)
 			recorder := httptest.NewRecorder()
 
 			body, err := json.Marshal(tc.body)
