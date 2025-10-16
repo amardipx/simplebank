@@ -23,29 +23,32 @@ type Server struct {
 func NewServer(config util.Config, store db.Store) (*Server, error) {
 	tokenMaker, err := token.NewJWTMaker(config.TokenSymmetricKey)
 	if err != nil {
-		return nil, fmt.Errorf("cannot create token maker, err: %w", err)
+		return nil, fmt.Errorf("cannot create token maker: %w", err)
 	}
+
 	server := &Server{
 		config:     config,
 		store:      store,
 		tokenMaker: tokenMaker,
 	}
+
 	router := gin.Default()
 
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("currency", validCurrency)
 	}
 
+	// Public routes
 	router.POST("/users", server.createUser)
 	router.POST("/users/login", server.loginUser)
 
+	// Authenticated routes
 	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
 	authRoutes.POST("/accounts", server.createAccount)
 	authRoutes.GET("/accounts/:id", server.getAccount)
 	authRoutes.GET("/accounts", server.listAccounts)
-
-	router.POST("/transfers", server.createTransfer)
+	authRoutes.POST("/transfers", server.createTransfer) // 🔒 moved here
 
 	server.router = router
 	return server, nil
